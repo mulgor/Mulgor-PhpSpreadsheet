@@ -357,6 +357,35 @@ class ReferenceHelper
     }
 
     /**
+     * Update worksheet conditionalStyles when inserting/deleting rows/columns.
+     *
+     * @param Worksheet $pSheet The worksheet that we're editing
+     * @param string $pBefore Insert/Delete before this cell address (e.g. 'A1')
+     * @param int $beforeColumnIndex Index number of the column we're inserting/deleting before
+     * @param int $pNumCols Number of columns to insert/delete (negative values indicate deletion)
+     * @param int $beforeRow Number of the row we're inserting/deleting before
+     * @param int $pNumRows Number of rows to insert/delete (negative values indicate deletion)
+     */
+    protected function adjustConditionalStyles($pSheet, $pBefore, $beforeColumnIndex, $pNumCols, $beforeRow, $pNumRows) {
+        $aConditionalStyles = $pSheet->getConditionalStylesCollection();
+        $aNewConditionalStyles = [];
+        $aOrgiConditionsStyleKeys = [];
+        foreach ($aConditionalStyles as $coordinate=>$conditionalStyle) {
+            $newReference = $this->updateCellReference($coordinate, $pBefore, $pNumCols, $pNumRows);
+            if ($newReference != $coordinate) {
+                $aNewConditionalStyles[$newReference] = $conditionalStyle;
+                array_push($aOrgiConditionsStyleKeys, $coordinate);
+            }
+        }
+        foreach ($aOrgiConditionsStyleKeys as $coordinate) {
+            $pSheet->removeConditionalStyles($coordinate);
+        }
+        foreach ($aNewConditionalStyles as $coordinate=>$conditionalStyle) {
+            $pSheet->setConditionalStyles($coordinate, $conditionalStyle);
+        }
+    }
+
+    /**
      * Insert a new column or row, updating all possible related data.
      *
      * @param string $pBefore Insert before this cell address (e.g. 'A1')
@@ -610,6 +639,9 @@ class ReferenceHelper
                 }
             }
         }
+
+        //update workbook: conditionalStyles
+        $this->adjustConditionalStyles($pSheet, $pBefore, $beforeColumnIndex, $pNumCols, $beforeRow, $pNumRows);
 
         // Garbage collect
         $pSheet->garbageCollect();
