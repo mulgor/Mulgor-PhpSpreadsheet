@@ -479,6 +479,9 @@ class ReferenceHelper
             }
         }
 
+        //update workbook: conditionalStyles
+        $this->adjustConditionalStyles($pSheet, $pBefore, $beforeColumnIndex, $pNumCols, $beforeRow, $pNumRows);
+
         // Duplicate styles for the newly inserted cells
         $highestColumn = $pSheet->getHighestColumn();
         $highestRow = $pSheet->getHighestRow();
@@ -639,9 +642,6 @@ class ReferenceHelper
                 }
             }
         }
-
-        //update workbook: conditionalStyles
-        $this->adjustConditionalStyles($pSheet, $pBefore, $beforeColumnIndex, $pNumCols, $beforeRow, $pNumRows);
 
         // Garbage collect
         $pSheet->garbageCollect();
